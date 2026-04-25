@@ -46,6 +46,40 @@ Scene Configuration
 
 ---
 
+## Macro API
+
+Segue exposes a small GM-only API at `game.segue`.
+
+Start a segue by scene ID or scene name:
+
+```js
+await game.segue.start("Scene Name");
+```
+
+Start a segue from a Scene document:
+
+```js
+const scene = game.scenes.getName("Scene Name");
+await game.segue.start(scene);
+```
+
+By default, `start` respects the scene's Segue enabled setting. To run a segue even if it is disabled for that scene:
+
+```js
+await game.segue.start("Scene Name", { force: true });
+```
+
+Read the resolved Segue configuration for a scene:
+
+```js
+const config = game.segue.getSceneConfiguration("Scene Name");
+console.log(config);
+```
+
+`game.segue.execute(...)` is also available as an alias for `game.segue.start(...)`.
+
+---
+
 ## Global Settings
 
 Found in **Game Settings > Configure Settings > Segue**:

@@ -6,6 +6,55 @@ import { getSceneFromLi } from './util/ui';
 
 let segueSocket: any;
 
+function getScene(scene: string | Scene): Scene | undefined {
+    if (typeof scene !== "string") {
+        return scene;
+    }
+
+    return game.scenes?.get(scene) ?? (game.scenes as any)?.getName?.(scene);
+}
+
+async function startSegue(sceneOrId: string | Scene, options: SegueStartOptions = {}): Promise<void> {
+    if (!game.user?.isGM) {
+        ui.notifications.error(`${MODULE_NAME} | Only a GM can start a segue.`);
+        return;
+    }
+
+    const scene = getScene(sceneOrId);
+
+    if (!scene) {
+        ui.notifications.error(game.i18n.localize("SEGUE.Notifications.SceneNotFound"));
+        return;
+    }
+
+    const sceneConfig = ConfigurationManager.getSceneConfiguration(scene);
+
+    if (!options.force && !sceneConfig.enabled) {
+        ui.notifications.info(game.i18n.localize("SEGUE.Notifications.SegueNotEnabled"));
+        return;
+    }
+
+    if (segueSocket) {
+        await segueSocket.executeForEveryone("startSegue", scene.id);
+    } else {
+        console.error(`${MODULE_NAME} | segueSocket failed to intialize`);
+        ui.notifications.error(`${MODULE_NAME} | segueSocket failed to initialize.`);
+    }
+}
+
+function getSceneConfiguration(sceneOrId: string | Scene) {
+    const scene = getScene(sceneOrId);
+    return scene ? ConfigurationManager.getSceneConfiguration(scene) : undefined;
+}
+
+function registerApi(): void {
+    game.segue = {
+        start: startSegue,
+        execute: startSegue,
+        getSceneConfiguration
+    };
+}
+
 Hooks.once('init', () => {
     // CONFIG.debug.hooks = true;
 
@@ -15,6 +64,8 @@ Hooks.once('init', () => {
 
     segueSocket = window.socketlib.registerModule(MODULE_ID);
     // console.log(`${MODULE_NAME} | initialized socketlib for module: ${MODULE_ID}`);
+
+    registerApi();
 
     segueSocket.register("startSegue", async (sceneId: string) => {
         // console.log(`${MODULE_NAME} | socketlib received 'startSegue' for scene ID: ${sceneId}`);
@@ -77,6 +128,8 @@ Hooks.once('init', () => {
 Hooks.once('ready', () => {
     const segueVersion = game.modules.get(MODULE_ID)?.version ?? "unknown";
     console.log(`%c🎬 ${MODULE_NAME} | ${segueVersion} Ready`, "color: orange; font-weight: bold;");
+
+    registerApi();
     
     // injects new Segue tab and content into scene configuration menu
     injectSceneConfig();
@@ -101,33 +154,7 @@ Hooks.on('getSceneContextOptions', (directory: SceneDirectory, options: ContextM
                 return;
             }
 
-            // console.log(`${MODULE_NAME} | context menu callback fired for scene: ${scene.name}`);
-
-            // grab current scene config
-            const sceneConfig = ConfigurationManager.getSceneConfiguration(scene);
-
-            // check is Segue is enabled for the scene
-            if (!sceneConfig.enabled) {
-                ui.notifications.info(game.i18n.localize("SEGUE.Notifications.SegueNotEnabled"));
-                return;
-            }
-
-            // ===============================================================================================
-            // #region Emit Socket Event 
-            // ===============================================================================================
-
-            // executeForEveryone event
-            if (segueSocket) {
-                // console.log(`${MODULE_NAME} | calling socketlib 'startSegue' for scene ID: ${scene.id}`);
-                await segueSocket.executeForEveryone("startSegue", scene.id);
-            } else {
-                console.error(`${MODULE_NAME} | segueSocket failed to intialize`);
-                ui.notifications.error(`${MODULE_NAME} | segueSocket failed to initialize.`);
-            }
-
-            // ===============================================================================================
-            // #endregion Emit Socket Event 
-            // ===============================================================================================
+            await startSegue(scene);
         }
     });
 

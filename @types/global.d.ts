@@ -14,6 +14,8 @@ declare global {
         };
         user?: User;
         scenes?: Collection<Scene>;
+        modules: Collection<{ version?: string }>;
+        segue?: SegueApi;
     }
 
     interface Ui {
@@ -42,6 +44,29 @@ declare global {
         getFlag(scope: string, key: string): any;
         setFlag(scope: string, key: string, value: any): Promise<any>;
         activate(): Promise<void>;
+    }
+
+    interface SegueStartOptions {
+        force?: boolean;
+    }
+
+    interface SegueSceneConfig {
+        enabled: boolean;
+        displayText: string;
+        fadeOutDuration: number;
+        textDisplayDuration: number;
+        fadeInDuration: number;
+        textSize: number;
+        textColor: string;
+        fontFamily: string;
+        textFadeInDuration: number;
+        textFadeOutDuration: number;
+    }
+
+    interface SegueApi {
+        start(scene: string | Scene, options?: SegueStartOptions): Promise<void>;
+        execute(scene: string | Scene, options?: SegueStartOptions): Promise<void>;
+        getSceneConfiguration(scene: string | Scene): SegueSceneConfig | undefined;
     }
 
     namespace foundry {
