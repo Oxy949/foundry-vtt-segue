@@ -4,11 +4,11 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const modulePath = process.env.FOUNDRY_VTT_DATA_PATH;
+// const modulePath = process.env.FOUNDRY_VTT_DATA_PATH;
 
-if (!modulePath) {
-  throw new Error("Missing or invalid FOUNDRY_VTT_DATA_PATH in .env");
-}
+// if (!modulePath) {
+//   throw new Error("Missing or invalid FOUNDRY_VTT_DATA_PATH in .env");
+// }
 
 export default defineConfig({
   root: 'src',
@@ -39,8 +39,8 @@ export default defineConfig({
       name: 'copy-to-foundry',
       closeBundle() {
         const fs = require('fs-extra');
-        fs.copySync('dist', modulePath, { overwrite: true });
-        console.log(`✅ Copied dist to ${modulePath}`);
+        // fs.copySync('dist', modulePath, { overwrite: true });
+        // console.log(`✅ Copied dist to ${modulePath}`);
       }
     }
   ]
